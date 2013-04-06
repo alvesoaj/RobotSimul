@@ -6,7 +6,6 @@ from direct.showbase.ShowBase import ShowBase
 from direct.actor.Actor import Actor
 from panda3d.core import *
 from FollowCam import FollowCam
-from KeyboardMouseHandler import KeyboardMouseHandler
 
 class Application(ShowBase):
     def __init__(self):
