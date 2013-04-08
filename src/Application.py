@@ -49,40 +49,64 @@ class Application(ShowBase):
         
     def setupCD(self):
         base.cTrav = CollisionTraverser()
-        base.cTrav.showCollisions(render)
+        # base.cTrav.showCollisions(render)
         self.notifier = CollisionHandlerEvent()
+        
         self.notifier.addInPattern("%fn-in-%in")
         self.notifier.addOutPattern("%fn-out-%in")
-        # self.accept("frowney-in-floor", self.onCollision)
+        
+        self.accept("cam-in-house_front", self.onHouseFrontCollision)
+        self.accept("cam-out-house_front", self.onHouseFrontUncollision)
+        
+        self.accept("cam-in-house_back", self.onHouseBackCollision)
+        self.accept("cam-out-house_back", self.onHouseBackUncollision)
+        
+        self.accept("cam-in-house_right_side", self.onHouseRightSideCollision)
+        self.accept("cam-out-house_right_side", self.onHouseRightSideUncollision)
+        
+        self.accept("cam-in-house_left_side", self.onHouseLeftSideCollision)
+        self.accept("cam-out-house_left_side", self.onHouseLeftSideUncollision)
         
     def addWalls(self):
         self.house_front = loader.loadModel("../models/house-front")
         self.house_front.setScale(8)
-        self.house_front.setPos(0, -35, 8)
+        self.house_front.setPos(0, -28, 8)
         self.house_front.setHpr(180, 0, 0)
         self.house_front.reparentTo(render)
         
-        colHF = self.house_front.attachNewNode(CollisionNode("cam"))
-        colHF.node().addSolid(CollisionBox(Point3(-3, -0.1, -1), Point3(3, 3, 1)))
-        colHF.show()
+        colHF = self.house_front.attachNewNode(CollisionNode("house_front"))
+        colHF.node().addSolid(CollisionBox(Point3(-3, -1, -1), Point3(3, 3, 1)))
+        # colHF.show()
         
         self.house_back = loader.loadModel("../models/house-back")
         self.house_back.setScale(8)
-        self.house_back.setPos(0, 35, 8)
+        self.house_back.setPos(0, 28, 8)
         self.house_back.setHpr(0, 0, 0)
         self.house_back.reparentTo(render)
         
+        colHB = self.house_back.attachNewNode(CollisionNode("house_back"))
+        colHB.node().addSolid(CollisionBox(Point3(-3, -1, -1), Point3(3, 3, 1)))
+        # colHB.show()
+        
         self.house_right_side = loader.loadModel("../models/house-side")
         self.house_right_side.setScale(8)
-        self.house_right_side.setPos(35, 0, 8)
+        self.house_right_side.setPos(14, 0, 8)
         self.house_right_side.setHpr(90, 0, 0)
         self.house_right_side.reparentTo(render)
         
+        colHRS = self.house_right_side.attachNewNode(CollisionNode("house_right_side"))
+        colHRS.node().addSolid(CollisionBox(Point3(-4, -3, -1), Point3(4, 1, 1)))
+        # colHRS.show()
+        
         self.house_left_side = loader.loadModel("../models/house-side")
         self.house_left_side.setScale(8)
-        self.house_left_side.setPos(-35, 0, 8)
+        self.house_left_side.setPos(-14, 0, 8)
         self.house_left_side.setHpr(-90, 0, 0)
         self.house_left_side.reparentTo(render)
+        
+        colHLS = self.house_left_side.attachNewNode(CollisionNode("house_left_side"))
+        colHLS.node().addSolid(CollisionBox(Point3(-4, -3, -1), Point3(4, 1, 1)))
+        # colHLS.show()
         
     def addCam(self):
         self.cam.setPos(0, -20, 6)
@@ -90,10 +114,34 @@ class Application(ShowBase):
         self.followCam = FollowCam(self.cam, self.panda)
         
         col = self.cam.attachNewNode(CollisionNode("cam"))
-        col.node().addSolid(CollisionSphere(0, -20, 6, 1.1))
-        # col.show()
+        col.node().addSolid(CollisionSphere(0, 10, 6, 4))
+        col.show()
         
         base.cTrav.addCollider(col, self.notifier)
+        
+    def onHouseFrontCollision(self, entry):
+        self.house_front.hide()
+        
+    def onHouseFrontUncollision(self, entry):
+        self.house_front.show()
+        
+    def onHouseBackCollision(self, entry):
+        self.house_back.hide()
+        
+    def onHouseBackUncollision(self, entry):
+        self.house_back.show()
+        
+    def onHouseRightSideCollision(self, entry):
+        self.house_right_side.hide()
+    
+    def onHouseRightSideUncollision(self, entry):
+        self.house_right_side.show()
+        
+    def onHouseLeftSideCollision(self, entry):
+        self.house_left_side.hide()
+    
+    def onHouseLeftSideUncollision(self, entry):
+        self.house_left_side.show()
         
     def resetMouse(self):
         cx = base.win.getProperties().getXSize() / 2
@@ -136,14 +184,14 @@ class Application(ShowBase):
         self.resetMouse()
         
         if self.pandaWalk:
-            self.panda.setY(self.panda, -0.2)
+            self.panda.setY(self.panda, -0.4)
         elif self.pandaReverse:
-            self.panda.setY(self.panda, 0.2)
+            self.panda.setY(self.panda, 0.4)
             
         if self.pandaLeft:
-            self.panda.setH(self.panda, 0.8)
+            self.panda.setH(self.panda, 1.6)
         elif self.pandaRight:
-            self.panda.setH(self.panda, -0.8)
+            self.panda.setH(self.panda, -1.6)
             
         return task.cont
 
