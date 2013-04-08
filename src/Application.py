@@ -6,26 +6,25 @@ from direct.showbase.ShowBase import ShowBase
 from direct.actor.Actor import Actor
 from panda3d.core import *
 from FollowCam import FollowCam
+from panda3d.core import Vec3
 
 class Application(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)
         
-        self.world = loader.loadModel("environment")
-        self.world.reparentTo(render)
-        self.world.setScale(0.5)
-        self.world.setPos(-8, 80, 0)
+        self.setupCD()
+        self.addWalls()
         
         self.panda = Actor("panda", {"walk": "panda-walk"})
+        self.panda.setPos(0, 0, 0)
         self.panda.reparentTo(render)
 
         self.crate = loader.loadModel("../models/crate")
-        self.crate.reparentTo(render)
-        self.crate.setPos(-5, 0, 0)
+        self.crate.setPos(0, 0, 0)
         self.crate.setScale(10)
-        self.cam.setPos(0, -30, 6)
-
-        self.followCam = FollowCam(self.cam, self.panda)
+        # self.crate.reparentTo(render)
+        
+        self.addCam()
         
         base.disableMouse()
         props = WindowProperties.getDefault()
@@ -47,6 +46,54 @@ class Application(ShowBase):
         self.accept("d", self.beginTurnRight)
         self.accept("d-up", self.endTurnRight)
         taskMgr.add(self.updatePanda, "update panda")
+        
+    def setupCD(self):
+        base.cTrav = CollisionTraverser()
+        base.cTrav.showCollisions(render)
+        self.notifier = CollisionHandlerEvent()
+        self.notifier.addInPattern("%fn-in-%in")
+        self.notifier.addOutPattern("%fn-out-%in")
+        # self.accept("frowney-in-floor", self.onCollision)
+        
+    def addWalls(self):
+        self.house_front = loader.loadModel("../models/house-front")
+        self.house_front.setScale(8)
+        self.house_front.setPos(0, -35, 8)
+        self.house_front.setHpr(180, 0, 0)
+        self.house_front.reparentTo(render)
+        
+        colHF = self.house_front.attachNewNode(CollisionNode("cam"))
+        colHF.node().addSolid(CollisionBox(Point3(-3, -0.1, -1), Point3(3, 3, 1)))
+        colHF.show()
+        
+        self.house_back = loader.loadModel("../models/house-back")
+        self.house_back.setScale(8)
+        self.house_back.setPos(0, 35, 8)
+        self.house_back.setHpr(0, 0, 0)
+        self.house_back.reparentTo(render)
+        
+        self.house_right_side = loader.loadModel("../models/house-side")
+        self.house_right_side.setScale(8)
+        self.house_right_side.setPos(35, 0, 8)
+        self.house_right_side.setHpr(90, 0, 0)
+        self.house_right_side.reparentTo(render)
+        
+        self.house_left_side = loader.loadModel("../models/house-side")
+        self.house_left_side.setScale(8)
+        self.house_left_side.setPos(-35, 0, 8)
+        self.house_left_side.setHpr(-90, 0, 0)
+        self.house_left_side.reparentTo(render)
+        
+    def addCam(self):
+        self.cam.setPos(0, -20, 6)
+
+        self.followCam = FollowCam(self.cam, self.panda)
+        
+        col = self.cam.attachNewNode(CollisionNode("cam"))
+        col.node().addSolid(CollisionSphere(0, -20, 6, 1.1))
+        # col.show()
+        
+        base.cTrav.addCollider(col, self.notifier)
         
     def resetMouse(self):
         cx = base.win.getProperties().getXSize() / 2
