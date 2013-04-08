@@ -24,6 +24,11 @@ class Application(ShowBase):
         self.crate.setScale(10)
         # self.crate.reparentTo(render)
         
+        self.robot = loader.loadModel("../models/robot")
+        self.robot.setPos(0, 0, 0)
+        self.robot.setScale(5)
+        self.robot.reparentTo(render)
+        
         self.addCam()
         
         base.disableMouse()
