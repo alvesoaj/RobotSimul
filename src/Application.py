@@ -12,22 +12,20 @@ class Application(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)
         
-        self.setupCD()
-        self.addWalls()
+        props = WindowProperties( )
+        props.setTitle('Robot Simul')
+        base.win.requestProperties(props)
         
-        self.panda = Actor("panda", {"walk": "panda-walk"})
-        self.panda.setPos(0, 0, 0)
-        self.panda.reparentTo(render)
+        self.setupCD()
+        
+        self.addWalls()
 
+        self.addActor()
+        
         self.crate = loader.loadModel("../models/crate")
         self.crate.setPos(0, 0, 0)
         self.crate.setScale(10)
         # self.crate.reparentTo(render)
-        
-        self.robot = loader.loadModel("../models/robot")
-        self.robot.setPos(0, 0, 0)
-        self.robot.setScale(5)
-        self.robot.reparentTo(render)
         
         self.addCam()
         
@@ -55,7 +53,11 @@ class Application(ShowBase):
     def setupCD(self):
         base.cTrav = CollisionTraverser()
         # base.cTrav.showCollisions(render)
+        
         self.notifier = CollisionHandlerEvent()
+        
+        # Initialize the Pusher collision handler.
+        self.pusher = CollisionHandlerPusher()
         
         self.notifier.addInPattern("%fn-in-%in")
         self.notifier.addOutPattern("%fn-out-%in")
@@ -80,7 +82,7 @@ class Application(ShowBase):
         self.house_front.reparentTo(render)
         
         colHF = self.house_front.attachNewNode(CollisionNode("house_front"))
-        colHF.node().addSolid(CollisionBox(Point3(-3, -1, -1), Point3(3, 3, 1)))
+        colHF.node().addSolid(CollisionBox(Point3(-4, 0, -1), Point3(4, 4, 1)))
         # colHF.show()
         
         self.house_back = loader.loadModel("../models/house-back")
@@ -90,7 +92,7 @@ class Application(ShowBase):
         self.house_back.reparentTo(render)
         
         colHB = self.house_back.attachNewNode(CollisionNode("house_back"))
-        colHB.node().addSolid(CollisionBox(Point3(-3, -1, -1), Point3(3, 3, 1)))
+        colHB.node().addSolid(CollisionBox(Point3(-4, 0, -1), Point3(4, 4, 1)))
         # colHB.show()
         
         self.house_right_side = loader.loadModel("../models/house-side")
@@ -100,7 +102,7 @@ class Application(ShowBase):
         self.house_right_side.reparentTo(render)
         
         colHRS = self.house_right_side.attachNewNode(CollisionNode("house_right_side"))
-        colHRS.node().addSolid(CollisionBox(Point3(-4, -3, -1), Point3(4, 1, 1)))
+        colHRS.node().addSolid(CollisionBox(Point3(-5, -4, -1), Point3(5, 0, 1)))
         # colHRS.show()
         
         self.house_left_side = loader.loadModel("../models/house-side")
@@ -110,8 +112,26 @@ class Application(ShowBase):
         self.house_left_side.reparentTo(render)
         
         colHLS = self.house_left_side.attachNewNode(CollisionNode("house_left_side"))
-        colHLS.node().addSolid(CollisionBox(Point3(-4, -3, -1), Point3(4, 1, 1)))
+        colHLS.node().addSolid(CollisionBox(Point3(-5, -4, -1), Point3(5, 0, 1)))
         # colHLS.show()
+        
+    def addActor(self):        
+        self.panda = Actor("panda", {"walk": "panda-walk"})
+        self.panda.setPos(0, 0, 0)
+        self.panda.reparentTo(render)
+        
+        colPanda = self.panda.attachNewNode(CollisionNode("panda"))
+        colPanda.node().addSolid(CollisionSphere(0, 0, 5, 4))
+        # colPanda.show()
+        
+        base.cTrav.addCollider(colPanda, self.pusher)
+        
+        self.pusher.addCollider(colPanda, self.panda, base.drive.node())
+        
+        self.robot = loader.loadModel("../models/robot")
+        self.robot.setPos(0, 0, 0)
+        # self.robot.setScale(5)
+        self.robot.reparentTo(render)
         
     def addCam(self):
         self.cam.setPos(0, -20, 6)
@@ -119,7 +139,7 @@ class Application(ShowBase):
         self.followCam = FollowCam(self.cam, self.panda)
         
         col = self.cam.attachNewNode(CollisionNode("cam"))
-        col.node().addSolid(CollisionSphere(0, 10, 6, 4))
+        col.node().addSolid(CollisionSphere(0, 0, 0, 8))
         col.show()
         
         base.cTrav.addCollider(col, self.notifier)
