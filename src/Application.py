@@ -7,15 +7,16 @@ from direct.actor.Actor import Actor
 from panda3d.core import *
 from FollowCam import FollowCam
 from panda3d.core import Vec3
+from direct.gui.OnscreenImage import OnscreenImage
+
+matrix = [[1 for i in xrange(38)] for i in xrange(52)]
+files = ["../images/white.png", "../images/gray.png", "../images/black.png"]
 
 class Application(ShowBase):
+
     def __init__(self):
         ShowBase.__init__(self)
-        
-        props = WindowProperties( )
-        props.setTitle('Robot Simul')
-        base.win.requestProperties(props)
-        
+            
         self.setupCD()
         
         self.addWalls()
@@ -32,10 +33,12 @@ class Application(ShowBase):
         self.addCam()
         
         base.disableMouse()
+
+        # self.drawChart()
         
         props = WindowProperties.getDefault()
         props.setCursorHidden(True)
-        props.setTitle('Robot Simul')
+        props.setTitle("AJ's Robot Simuluator - Robotic Class")
         base.win.requestProperties(props)
         
         self.resetMouse()
@@ -53,6 +56,9 @@ class Application(ShowBase):
         self.accept("a-up", self.endTurnLeft)
         self.accept("d", self.beginTurnRight)
         self.accept("d-up", self.endTurnRight)
+        
+        self.accept("p", self.getActorPoint)
+
         taskMgr.add(self.updatePanda, "update panda")
         
     def setupCD(self):
@@ -127,7 +133,7 @@ class Application(ShowBase):
         self.panda.reparentTo(render)
         """
         
-        self.robot = Actor("../models/robot")
+        self.robot = loader.loadModel("../models/robot")
         self.robot.setPos(0, 0, 1)
         # self.robot.setScale(5)
         self.robot.reparentTo(render)
@@ -135,6 +141,10 @@ class Application(ShowBase):
         colRobot = self.robot.attachNewNode(CollisionNode("robot"))
         colRobot.node().addSolid(CollisionSphere(0, 0, 0, 1.9))
         # colRobot.show()
+        
+        colRobotRay = self.robot.attachNewNode(CollisionNode("robot-ray"))
+        colRobotRay.node().addSolid(CollisionTube(0, -3.3, 0.3, 0, -10, 0.3, 0.25))
+        colRobotRay.show()
         
         base.cTrav.addCollider(colRobot, self.pusher)
         
@@ -229,6 +239,9 @@ class Application(ShowBase):
     def endTurnRight(self):
         self.pandaRight = False
 
+    def getActorPoint(self):
+        print("x: "+str(self.robot.getX())+" y: "+str(self.robot.getY())+" z: "+str(self.robot.getZ()))
+
     def updatePanda(self, task):
         if base.mouseWatcherNode.hasMouse():
             self.robot.setH(self.robot, -base.mouseWatcherNode.getMouseX() * 10)
@@ -244,5 +257,14 @@ class Application(ShowBase):
         elif self.pandaRight:
             self.robot.setH(self.robot, -0.8)
             
-        return task.cont
+        return task.cont        
+
+    def drawChart(self):
+        for i in range(0, 52):
+            for j in range(0, 38):
+                OnscreenImage(files[matrix[i][j]],
+                        scale = Vec3(0.5, 0.5, 0.5),
+                        pos = Vec3(0, 7, 0),
+                        parent = self.cam
+                    )
 
