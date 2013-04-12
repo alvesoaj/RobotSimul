@@ -127,7 +127,7 @@ class Application(ShowBase):
         self.panda.reparentTo(render)
         """
         
-        self.robot = loader.loadModel("../models/robot")
+        self.robot = Actor("../models/robot")
         self.robot.setPos(0, 0, 1)
         # self.robot.setScale(5)
         self.robot.reparentTo(render)
@@ -151,7 +151,7 @@ class Application(ShowBase):
         # colCrate.show()
         
         self.tri = loader.loadModel("../models/tri")
-        self.tri.setPos(-10, 15, 1.1)
+        self.tri.setPos(-10, 15, 0.8)
         # self.tri.setScale(3)
         self.tri.reparentTo(render)
         
