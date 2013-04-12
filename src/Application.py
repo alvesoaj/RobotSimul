@@ -19,20 +19,25 @@ class Application(ShowBase):
         self.setupCD()
         
         self.addWalls()
+        
+        self.floor = loader.loadModel("../models/floor")
+        self.floor.setPos(0, 0, -1)
+        self.floor.setScale(6)
+        self.floor.reparentTo(render)
 
         self.addActor()
         
-        self.crate = loader.loadModel("../models/crate")
-        self.crate.setPos(0, 0, 0)
-        self.crate.setScale(10)
-        # self.crate.reparentTo(render)
+        self.addObstacles()
         
         self.addCam()
         
         base.disableMouse()
+        
         props = WindowProperties.getDefault()
         props.setCursorHidden(True)
+        props.setTitle('Robot Simul')
         base.win.requestProperties(props)
+        
         self.resetMouse()
         # don't use -repeat because of slight delay after keydown
         self.pandaWalk = False
@@ -115,28 +120,49 @@ class Application(ShowBase):
         colHLS.node().addSolid(CollisionBox(Point3(-5, -4, -1), Point3(5, 0, 1)))
         # colHLS.show()
         
-    def addActor(self):        
+    def addActor(self):
+        """
         self.panda = Actor("panda", {"walk": "panda-walk"})
         self.panda.setPos(0, 0, 0)
         self.panda.reparentTo(render)
-        
-        colPanda = self.panda.attachNewNode(CollisionNode("panda"))
-        colPanda.node().addSolid(CollisionSphere(0, 0, 5, 4))
-        # colPanda.show()
-        
-        base.cTrav.addCollider(colPanda, self.pusher)
-        
-        self.pusher.addCollider(colPanda, self.panda, base.drive.node())
+        """
         
         self.robot = loader.loadModel("../models/robot")
-        self.robot.setPos(0, 0, 0)
+        self.robot.setPos(0, 0, 1)
         # self.robot.setScale(5)
         self.robot.reparentTo(render)
+        
+        colRobot = self.robot.attachNewNode(CollisionNode("robot"))
+        colRobot.node().addSolid(CollisionSphere(0, 0, 0, 1.9))
+        # colRobot.show()
+        
+        base.cTrav.addCollider(colRobot, self.pusher)
+        
+        self.pusher.addCollider(colRobot, self.robot, base.drive.node())
+        
+    def addObstacles(self):
+        self.crate = loader.loadModel("../models/crate")
+        self.crate.setPos(0, -15, 1.1)
+        # self.crate.setScale(3)
+        self.crate.reparentTo(render)
+        
+        colCrate = self.crate.attachNewNode(CollisionNode("crate"))
+        colCrate.node().addSolid(CollisionBox(Point3(-0.6, -0.6, -0.6), Point3(0.6, 0.6, 0.6)))
+        # colCrate.show()
+        
+        self.tri = loader.loadModel("../models/tri")
+        self.tri.setPos(-10, 15, 1.1)
+        # self.tri.setScale(3)
+        self.tri.reparentTo(render)
+        
+        colTri = self.tri.attachNewNode(CollisionNode("tri"))
+        colTri.node().addSolid(CollisionBox(Point3(-0.6, -0.6, -0.6), Point3(0.6, 0.6, 0.6)))
+        # colTri.show()
         
     def addCam(self):
         self.cam.setPos(0, -20, 6)
 
-        self.followCam = FollowCam(self.cam, self.panda)
+        self.followCam = FollowCam(self.cam, self.robot)
         
         col = self.cam.attachNewNode(CollisionNode("cam"))
         col.node().addSolid(CollisionSphere(0, 0, 0, 8))
@@ -174,21 +200,21 @@ class Application(ShowBase):
         base.win.movePointer(0, cx, cy)
 
     def beginWalk(self):
-        self.panda.setPlayRate(1.0, "walk")
-        self.panda.loop("walk")
+        # self.panda.setPlayRate(1.0, "walk")
+        # self.panda.loop("walk")
         self.pandaWalk = True
     
     def endWalk(self):
-        self.panda.stop()
+        # self.panda.stop()
         self.pandaWalk = False
     
     def beginReverse(self):
-        self.panda.setPlayRate(-1.0, "walk")
-        self.panda.loop("walk")
+        # self.panda.setPlayRate(-1.0, "walk")
+        # self.panda.loop("walk")
         self.pandaReverse = True
         
     def endReverse(self):
-        self.panda.stop()
+        # self.panda.stop()
         self.pandaReverse = False
         
     def beginTurnLeft(self):
@@ -205,18 +231,18 @@ class Application(ShowBase):
 
     def updatePanda(self, task):
         if base.mouseWatcherNode.hasMouse():
-            self.panda.setH(self.panda, -base.mouseWatcherNode.getMouseX() * 10)
+            self.robot.setH(self.robot, -base.mouseWatcherNode.getMouseX() * 10)
         self.resetMouse()
         
         if self.pandaWalk:
-            self.panda.setY(self.panda, -0.4)
+            self.robot.setY(self.robot, -0.2)
         elif self.pandaReverse:
-            self.panda.setY(self.panda, 0.4)
+            self.robot.setY(self.robot, 0.2)
             
         if self.pandaLeft:
-            self.panda.setH(self.panda, 1.6)
+            self.robot.setH(self.robot, 0.8)
         elif self.pandaRight:
-            self.panda.setH(self.panda, -1.6)
+            self.robot.setH(self.robot, -0.8)
             
         return task.cont
 
