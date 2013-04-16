@@ -9,8 +9,11 @@ from FollowCam import FollowCam
 from panda3d.core import Vec3
 from direct.gui.OnscreenImage import OnscreenImage
 
+from PIL import Image, ImageDraw
+from pylab import *
+import os
+
 matrix = [[1 for i in xrange(38)] for i in xrange(52)]
-files = ["../images/white.png", "../images/gray.png", "../images/black.png"]
 
 class Application(ShowBase):
 
@@ -34,7 +37,7 @@ class Application(ShowBase):
         
         base.disableMouse()
 
-        # self.drawChart()
+        self.drawChart()
         
         props = WindowProperties.getDefault()
         props.setCursorHidden(True)
@@ -60,6 +63,8 @@ class Application(ShowBase):
         self.accept("p", self.getActorPoint)
 
         taskMgr.add(self.updatePanda, "update panda")
+
+        taskMgr.doMethodLater(1, self.checkRobotray, "check robotray")
         
     def setupCD(self):
         base.cTrav = CollisionTraverser()
@@ -84,6 +89,13 @@ class Application(ShowBase):
         
         self.accept("cam-in-house_left_side", self.onHouseLeftSideCollision)
         self.accept("cam-out-house_left_side", self.onHouseLeftSideUncollision)
+
+        self.accept("robotray-in-house_front", self.onRayCollision)
+        self.accept("robotray-in-house_back", self.onRayCollision)
+        self.accept("robotray-in-house_right_side", self.onRayCollision)
+        self.accept("robotray-in-house_left_side", self.onRayCollision)
+        self.accept("robotray-in-crate", self.onRayCollision)
+        self.accept("robotray-in-tri", self.onRayCollision)
         
     def addWalls(self):
         self.house_front = loader.loadModel("../models/house-front")
@@ -142,7 +154,7 @@ class Application(ShowBase):
         colRobot.node().addSolid(CollisionSphere(0, 0, 0, 1.9))
         # colRobot.show()
         
-        colRobotRay = self.robot.attachNewNode(CollisionNode("robot-ray"))
+        colRobotRay = self.robot.attachNewNode(CollisionNode("robotray"))
         colRobotRay.node().addSolid(CollisionTube(0, -3.3, 0.3, 0, -10, 0.3, 0.25))
         colRobotRay.show()
         
@@ -257,14 +269,27 @@ class Application(ShowBase):
         elif self.pandaRight:
             self.robot.setH(self.robot, -0.8)
             
-        return task.cont        
+        return task.cont
+
+    def checkRobotray(self, task):
+        # print self.colRobotRay.node().getSolid(0).getCollisionOrigin()
+        return task.again
+
+    def onRayCollision(self, entry):
+        print entry.getPoint()
 
     def drawChart(self):
-        for i in range(0, 52):
-            for j in range(0, 38):
-                OnscreenImage(files[matrix[i][j]],
-                        scale = Vec3(0.5, 0.5, 0.5),
-                        pos = Vec3(0, 7, 0),
-                        parent = self.cam
-                    )
+        im = Image.new("RGB", (520, 380), (127, 127, 127))
+        draw = ImageDraw.Draw(im)
 
+        for x in range(0, 52):
+            for y in range(0, 38):
+                draw.rectangle([(10*x, 10*y), (10*x+10, 10*y+10)], fill=(127, 127, 127))
+
+        im.save(os.getcwd()+"/textures/map.png")
+
+        OnscreenImage("../textures/map.png",
+                scale = Vec3(1, 0.5, 0.5),
+                pos = Vec3(-1, 8, 1),
+                parent = self.cam
+            )
