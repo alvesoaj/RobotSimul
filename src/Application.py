@@ -65,7 +65,8 @@ class Application(ShowBase):
         self.accept("p", self.getActorPoint)
 
         taskMgr.add(self.updatePanda, "update panda")
-        # taskMgr.doMethodLater(1, self.checkRobotray, "check robotray")
+        
+        taskMgr.doMethodLater(1, self.checkRobotray, "check robotray")
         
     def setupCD(self):
         base.cTrav = CollisionTraverser()
@@ -153,9 +154,16 @@ class Application(ShowBase):
         colRobot = self.robot.attachNewNode(CollisionNode("robot"))
         colRobot.node().addSolid(CollisionSphere(0, 0, 0, 1.9))
         # colRobot.show()
+
+        self.ray = loader.loadModel("../models/ray")
+        self.ray.setPos(0, -3, 0.3)
+        # self.ray.setScale(5)
+        self.ray.reparentTo(render)
         
+        self.rayMove = 0
+
         colRobotRay = self.robot.attachNewNode(CollisionNode("robotray"))
-        colRobotRay.node().addSolid(CollisionSegment(0, -3, 0.3, 0, -10, 0.3))
+        colRobotRay.node().addSolid(CollisionSegment(0, -3, 0.3, 0, -4, 0.3))
         colRobotRay.show()
 
         base.cTrav.addCollider(colRobotRay, self.notifier)
@@ -281,8 +289,18 @@ class Application(ShowBase):
         print "x: "+str(x)+", y: "+str(y)
         
         matrix[x][y] = 0
-        self.map.destroy()
         self.drawChart()
+
+    def checkRobotray(self, task):
+        if self.rayMove == 0:
+            self.rayMove = 1
+            self.ray.setY(self.robot.getY() + 3);
+        else:
+            self.rayMove = 0
+            self.ray.setY(self.robot.getY());
+        
+        self.ray.setX(self.robot.getX());
+        return task.again
 
     def drawChart(self):
         im = Image.new("RGB", (310, 590), (127, 127, 127))
