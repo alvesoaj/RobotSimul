@@ -13,7 +13,9 @@ from PIL import Image, ImageDraw
 from pylab import *
 import os
 
-matrix = [[1 for i in xrange(38)] for i in xrange(52)]
+lineNum = 31
+columnNum = 59
+matrix = [[127 for i in xrange(columnNum)] for i in xrange(lineNum)]
 
 class Application(ShowBase):
 
@@ -63,17 +65,15 @@ class Application(ShowBase):
         self.accept("p", self.getActorPoint)
 
         taskMgr.add(self.updatePanda, "update panda")
-
-        taskMgr.doMethodLater(1, self.checkRobotray, "check robotray")
+        # taskMgr.doMethodLater(1, self.checkRobotray, "check robotray")
         
     def setupCD(self):
         base.cTrav = CollisionTraverser()
         # base.cTrav.showCollisions(render)
+
+        self.pusher = CollisionHandlerPusher()
         
         self.notifier = CollisionHandlerEvent()
-        
-        # Initialize the Pusher collision handler.
-        self.pusher = CollisionHandlerPusher()
         
         self.notifier.addInPattern("%fn-in-%in")
         self.notifier.addOutPattern("%fn-out-%in")
@@ -155,8 +155,10 @@ class Application(ShowBase):
         # colRobot.show()
         
         colRobotRay = self.robot.attachNewNode(CollisionNode("robotray"))
-        colRobotRay.node().addSolid(CollisionTube(0, -3.3, 0.3, 0, -10, 0.3, 0.25))
+        colRobotRay.node().addSolid(CollisionSegment(0, -3, 0.3, 0, -10, 0.3))
         colRobotRay.show()
+
+        base.cTrav.addCollider(colRobotRay, self.notifier)
         
         base.cTrav.addCollider(colRobot, self.pusher)
         
@@ -165,7 +167,7 @@ class Application(ShowBase):
     def addObstacles(self):
         self.crate = loader.loadModel("../models/crate")
         self.crate.setPos(0, -15, 1.1)
-        # self.crate.setScale(3)
+        self.crate.setScale(4)
         self.crate.reparentTo(render)
         
         colCrate = self.crate.attachNewNode(CollisionNode("crate"))
@@ -188,7 +190,7 @@ class Application(ShowBase):
         
         col = self.cam.attachNewNode(CollisionNode("cam"))
         col.node().addSolid(CollisionSphere(0, 0, 0, 8))
-        col.show()
+        # col.show()
         
         base.cTrav.addCollider(col, self.notifier)
         
@@ -271,24 +273,29 @@ class Application(ShowBase):
             
         return task.cont
 
-    def checkRobotray(self, task):
-        # print self.colRobotRay.node().getSolid(0).getCollisionOrigin()
-        return task.again
-
     def onRayCollision(self, entry):
-        print entry.getPoint()
+        point = entry.getSurfacePoint(render)
+        x = int(point.get_x() + 15)
+        y = int(point.get_y() + 29)
+
+        print "x: "+str(x)+", y: "+str(y)
+        
+        matrix[x][y] = 0
+        self.map.destroy()
+        self.drawChart()
 
     def drawChart(self):
-        im = Image.new("RGB", (520, 380), (127, 127, 127))
+        im = Image.new("RGB", (310, 590), (127, 127, 127))
         draw = ImageDraw.Draw(im)
 
-        for x in range(0, 52):
-            for y in range(0, 38):
-                draw.rectangle([(10*x, 10*y), (10*x+10, 10*y+10)], fill=(127, 127, 127))
+        for x in range(lineNum):
+            for y in range(columnNum):
+                color = matrix[x][y]
+                draw.rectangle([(10*x, 10*y), (10*x+10, 10*y+10)], fill=(color, color, color))
 
         im.save(os.getcwd()+"/textures/map.png")
 
-        OnscreenImage("../textures/map.png",
+        self.map = OnscreenImage("../textures/map.png",
                 scale = Vec3(1, 0.5, 0.5),
                 pos = Vec3(-1, 8, 1),
                 parent = self.cam
