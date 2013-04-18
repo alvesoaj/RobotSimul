@@ -13,18 +13,17 @@ from PIL import Image, ImageDraw
 from pylab import *
 import os
 
-lineNum = 33
-columnNum = 61
-step = 10
-pandaStep = 1
-matrix = [[127 for i in xrange(columnNum)] for i in xrange(lineNum)]
-
-
 class Application(ShowBase):
 
     def __init__(self):
         ShowBase.__init__(self)
 
+        self.lineNum = 33
+        self.columnNum = 61
+        self.step = 10
+        self.pandaStep = 1
+        self.matrix = [[127 for i in xrange(self.columnNum)] for i in xrange(self.lineNum)]
+    
         self.setupCD()
 
         self.addWalls()
@@ -42,7 +41,7 @@ class Application(ShowBase):
 
         base.disableMouse()
 
-        self.im = Image.new("RGB", (lineNum * step, columnNum * step), (127, 127, 127))
+        self.im = Image.new("RGB", (self.lineNum * self.step, self.columnNum * self.step), (127, 127, 127))
         self.draw = ImageDraw.Draw(self.im)
 
         self.drawChart()
@@ -300,11 +299,11 @@ class Application(ShowBase):
 
         # print "x: " + str(x) + ", y: " + str(y)
 
-        matrix[x][y] = 0
+        self.matrix[x][y] = 0
         self.drawChart()
 
     def checkRobotray(self, task):
-        self.ray.setY(self.ray.getY() - pandaStep);
+        self.ray.setY(self.ray.getY() - self.pandaStep);
         self.rayCount = self.rayCount + 1
 
         x = int(self.robot.getX() + self.ray.getX() + 15)
@@ -320,10 +319,10 @@ class Application(ShowBase):
         return task.again
 
     def drawChart(self):
-        for x in range(lineNum):
-            for y in range(columnNum):
-                color = matrix[x][y]
-                self.draw.rectangle([(step * x, step * y), (step * x + step, step * y + step)], fill=(color, color, color))
+        for x in range(self.lineNum):
+            for y in range(self.columnNum):
+                color = self.matrix[x][y]
+                self.draw.rectangle([(self.step * x, self.step * y), (self.step * x + self.step, self.step * y + self.step)], fill=(color, color, color))
 
         self.map = OnscreenImage("../textures/map.png",
                 scale = Vec3(1, 0.5, 0.5),
